@@ -79,6 +79,7 @@ export function mockContainerProps(overrides?: Partial<DatagridContainerProps>):
         onClickTrigger: "single",
         showNumberOfRows: false,
         showEmptyPlaceholder: "none",
+        showTopScrollbar: true,
         configurationStorageType: "attribute",
         configurationAttribute: undefined,
         storeFiltersInPersonalization: true,

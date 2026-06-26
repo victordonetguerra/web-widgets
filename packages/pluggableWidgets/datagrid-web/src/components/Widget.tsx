@@ -14,12 +14,12 @@ import { WidgetHeader } from "./WidgetHeader";
 import { WidgetRoot } from "./WidgetRoot";
 import { WidgetTopBar } from "./WidgetTopBar";
 
-export function Widget(props: { onExportCancel?: () => void }): ReactElement {
+export function Widget(props: { onExportCancel?: () => void; showTopScrollbar: boolean }): ReactElement {
     return (
         <WidgetRoot>
             <WidgetTopBar />
             <WidgetHeader />
-            <WidgetContent>
+            <WidgetContent showTopScrollbar={props.showTopScrollbar}>
                 <Grid>
                     <GridHeader />
                     <SelectAllBar />

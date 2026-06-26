@@ -10,7 +10,6 @@ export const Grid = observer(function Grid(props: PropsWithChildren): ReactEleme
     const [handleScroll] = useInfiniteControl();
 
     const style = useGridStyle().get();
-
     return (
         <div
             aria-multiselectable={config.multiselectable}

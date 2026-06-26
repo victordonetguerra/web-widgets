@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { CSSProperties, ReactElement, ReactNode, UIEvent, useLayoutEffect, useRef, useState } from "react";
+import { CSSProperties, ReactElement, ReactNode, UIEvent, useLayoutEffect, useRef } from "react";
 
 export type WidgetContentProps = {
     className?: string;
@@ -11,36 +11,36 @@ export type WidgetContentProps = {
 export function WidgetContent({ children, className, showTopScrollbar = true }: WidgetContentProps): ReactElement {
     const contentRef = useRef<HTMLDivElement>(null);
     const topScrollbarRef = useRef<HTMLDivElement>(null);
+    const topScrollbarContentRef = useRef<HTMLDivElement>(null);
     const isSyncingScrollRef = useRef(false);
-    const [scrollWidth, setScrollWidth] = useState(1);
 
     useLayoutEffect(() => {
         const content = contentRef.current;
+        const topScrollbar = topScrollbarRef.current;
+        const topScrollbarContent = topScrollbarContentRef.current;
 
-        if (!content) {
+        if (!content || !topScrollbar || !topScrollbarContent) {
             return;
         }
 
         const updateTopScrollbar = (): void => {
-            setScrollWidth(content.scrollWidth);
-
-            if (topScrollbarRef.current) {
-                topScrollbarRef.current.scrollLeft = content.scrollLeft;
-            }
+            topScrollbarContent.style.width = `${content.scrollWidth}px`;
+            topScrollbar.scrollLeft = content.scrollLeft;
         };
 
         const syncFromContent = (): void => {
-            if (!topScrollbarRef.current || isSyncingScrollRef.current) {
+            if (isSyncingScrollRef.current) {
                 return;
             }
 
             isSyncingScrollRef.current = true;
-            topScrollbarRef.current.scrollLeft = content.scrollLeft;
+            topScrollbar.scrollLeft = content.scrollLeft;
             isSyncingScrollRef.current = false;
         };
 
         const resizeObserver = new ResizeObserver(updateTopScrollbar);
         resizeObserver.observe(content);
+
         Array.from(content.children).forEach(child => resizeObserver.observe(child));
 
         content.addEventListener("scroll", syncFromContent, { passive: true });
@@ -79,7 +79,7 @@ export function WidgetContent({ children, className, showTopScrollbar = true }: 
                     marginBottom: 4
                 }}
             >
-                <div style={{ width: scrollWidth, height: 1 }} />
+                <div ref={topScrollbarContentRef} style={{ height: 1 }} />
             </div>
 
             <div ref={contentRef} className={classNames("widget-datagrid-content", className)}>

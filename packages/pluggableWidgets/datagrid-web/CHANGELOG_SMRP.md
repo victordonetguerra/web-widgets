@@ -402,3 +402,52 @@ Generar nuevo MPK.
 - Primera implementación estable del scroll horizontal superior sincronizado para Data Grid 2.
 - Compatible con Mendix Studio Pro.
 - Mantiene el comportamiento original del widget oficial.
+
+# Versión SMRP 1.0.1
+
+## Corrección
+
+Se resolvió un problema detectado al modificar la visibilidad de columnas ("Can hide = Yes", "Hidden by default") cuando estaba habilitada la barra de desplazamiento superior.
+
+### Síntomas
+
+Al mostrar u ocultar columnas desde el selector del Data Grid 2 aparecía una excepción del Runtime de Mendix:
+
+```text
+Unable to find objects for guids: [...]
+CommitExecutor.apply(...)
+```
+
+La excepción únicamente se producía cuando estaba activada la barra de desplazamiento superior.
+
+### Causa
+
+La primera implementación almacenaba el ancho del scrollbar superior mediante `useState`.
+
+Cada vez que `ResizeObserver` detectaba un cambio de tamaño del Data Grid, se ejecutaba:
+
+```ts
+setScrollWidth(...)
+```
+
+Esto provocaba un nuevo render de `WidgetContent` mientras Mendix estaba actualizando el estado interno del Data Grid durante la personalización de columnas, invalidando referencias internas del cliente y produciendo el error de GUID inexistente.
+
+### Solución
+
+Se eliminó completamente el uso de estado React (`useState`) para el scrollbar superior.
+
+El ancho del scrollbar se actualiza ahora de forma imperativa mediante referencias (`useRef`) sobre el elemento DOM.
+
+La sincronización del scroll continúa siendo bidireccional, pero sin provocar renders adicionales del componente.
+
+### Beneficios
+
+- Eliminación de renders innecesarios.
+- Mayor estabilidad durante la personalización de columnas.
+- Sincronización más eficiente.
+- Desaparece la excepción `Unable to find objects for guids`.
+- Menor carga de renderizado de React.
+
+Estado:
+
+✅ Corregido y verificado.

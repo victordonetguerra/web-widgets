@@ -1,11 +1,12 @@
-import { ReactElement, useLayoutEffect, useRef } from "react";
+import { ReactElement, UIEvent, useLayoutEffect, useRef } from "react";
 import { useGridSizeStore } from "../model/hooks/injection-hooks";
 
-export function TopHorizontalScrollbar(): ReactElement {
+export function TopHorizontalScrollbar(props: { showTopScrollbar: boolean }): ReactElement | null {
     const gridSizeStore = useGridSizeStore();
+
     const topScrollbarRef = useRef<HTMLDivElement>(null);
     const topScrollbarContentRef = useRef<HTMLDivElement>(null);
-    const isSyncingRef = useRef(false);
+    const isSyncingScrollRef = useRef(false);
 
     useLayoutEffect(() => {
         const grid = gridSizeStore.gridContainerRef.current;
@@ -16,80 +17,72 @@ export function TopHorizontalScrollbar(): ReactElement {
             return;
         }
 
-        const updateScrollbarWidth = (): void => {
+        const content = grid.closest(".widget-datagrid-content") as HTMLDivElement | null;
+
+        if (!content) {
+            return;
+        }
+
+        const updateTopScrollbarWidth = (): void => {
             topScrollbarContent.style.width = `${grid.scrollWidth}px`;
-            topScrollbar.style.display = grid.scrollWidth > grid.clientWidth ? "block" : "none";
-            topScrollbar.scrollLeft = grid.scrollLeft;
+            topScrollbar.scrollLeft = content.scrollLeft;
         };
 
-        const syncFromTop = (): void => {
-            if (isSyncingRef.current) {
+        const syncFromContent = (): void => {
+            if (isSyncingScrollRef.current) {
                 return;
             }
 
-            isSyncingRef.current = true;
-            grid.scrollLeft = topScrollbar.scrollLeft;
-            isSyncingRef.current = false;
+            isSyncingScrollRef.current = true;
+            topScrollbar.scrollLeft = content.scrollLeft;
+            isSyncingScrollRef.current = false;
         };
 
-        const syncFromGrid = (): void => {
-            if (isSyncingRef.current) {
-                return;
-            }
+        content.addEventListener("scroll", syncFromContent, { passive: true });
 
-            isSyncingRef.current = true;
-            topScrollbar.scrollLeft = grid.scrollLeft;
-            isSyncingRef.current = false;
-        };
-
-        const resizeObserver = new ResizeObserver(updateScrollbarWidth);
-        resizeObserver.observe(grid);
-
-        Array.from(grid.children).forEach(child => resizeObserver.observe(child));
-
-        const mutationObserver = new MutationObserver(() => {
-            Array.from(grid.children).forEach(child => resizeObserver.observe(child));
-            updateScrollbarWidth();
-        });
-
-        mutationObserver.observe(grid, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ["style", "class"]
-        });
-
-        topScrollbar.addEventListener("scroll", syncFromTop, { passive: true });
-        grid.addEventListener("scroll", syncFromGrid, { passive: true });
-
-        updateScrollbarWidth();
+        updateTopScrollbarWidth();
 
         return () => {
-            topScrollbar.removeEventListener("scroll", syncFromTop);
-            grid.removeEventListener("scroll", syncFromGrid);
-            resizeObserver.disconnect();
-            mutationObserver.disconnect();
+            content.removeEventListener("scroll", syncFromContent);
         };
     }, [gridSizeStore.gridContainerRef]);
+
+    const handleTopScrollbarScroll = (event: UIEvent<HTMLDivElement>): void => {
+        const grid = gridSizeStore.gridContainerRef.current;
+
+        if (!grid || isSyncingScrollRef.current) {
+            return;
+        }
+
+        const content = grid.closest(".widget-datagrid-content") as HTMLDivElement | null;
+
+        if (!content) {
+            return;
+        }
+
+        isSyncingScrollRef.current = true;
+        content.scrollLeft = event.currentTarget.scrollLeft;
+        isSyncingScrollRef.current = false;
+    };
 
     return (
         <div
             className="widget-datagrid-top-scrollbar"
             ref={topScrollbarRef}
+            onScroll={handleTopScrollbarScroll}
+            tabIndex={-1}
+            aria-hidden="true"
+            role="presentation"
             style={{
+                display: props.showTopScrollbar ? "block" : "none",
+                width: "100%",
                 overflowX: "auto",
                 overflowY: "hidden",
-                height: 12,
-                minHeight: 12,
-                maxHeight: 12
+                marginBottom: 4,
+                userSelect: "none"
             }}
         >
-            <div
-                ref={topScrollbarContentRef}
-                style={{
-                    height: 1
-                }}
-            />
+            <div ref={topScrollbarContentRef} style={{ height: 1 }} />
         </div>
     );
 }

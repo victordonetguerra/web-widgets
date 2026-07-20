@@ -13,13 +13,15 @@ import { WidgetFooter } from "./WidgetFooter";
 import { WidgetHeader } from "./WidgetHeader";
 import { WidgetRoot } from "./WidgetRoot";
 import { WidgetTopBar } from "./WidgetTopBar";
+import { TopHorizontalScrollbar } from "./TopHorizontalScrollbar";
 
 export function Widget(props: { onExportCancel?: () => void; showTopScrollbar: boolean }): ReactElement {
     return (
         <WidgetRoot>
             <WidgetTopBar />
             <WidgetHeader />
-            <WidgetContent showTopScrollbar={props.showTopScrollbar}>
+            <TopHorizontalScrollbar showTopScrollbar={props.showTopScrollbar} />
+            <WidgetContent>
                 <Grid>
                     <GridHeader />
                     <SelectAllBar />
